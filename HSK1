@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HSK 1 Vocabulary Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f7f5f0;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #6b6b6b;
+    --hint: #aaa;
+    --green: #1D9E75;
+    --green-light: #e1f5ee;
+    --red: #c0392b;
+    --red-light: #fdecea;
+    --border: #e5e2db;
+    --accent: #2d3a8c;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 1rem;
+  }
+  .app { max-width: 480px; margin: 0 auto; padding-bottom: 3rem; }
+  header { text-align: center; padding: 1.5rem 0 1rem; }
+  header h1 { font-size: 26px; font-weight: 600; color: var(--accent); letter-spacing: -0.5px; }
+  header p { font-size: 14px; color: var(--muted); margin-top: 4px; }
+  .mode-tabs { display: flex; gap: 6px; background: var(--card); border-radius: var(--radius-sm); padding: 5px; margin-bottom: 1rem; border: 1px solid var(--border); }
+  .tab { flex: 1; padding: 9px; border-radius: 7px; border: none; background: transparent; cursor: pointer; font-size: 14px; font-family: 'Outfit', sans-serif; font-weight: 500; color: var(--muted); transition: all 0.15s; }
+  .tab.active { background: var(--accent); color: #fff; }
+  .filter-wrap { overflow-x: auto; padding-bottom: 6px; margin-bottom: 1rem; -webkit-overflow-scrolling: touch; }
+  .filter-row { display: flex; gap: 6px; width: max-content; }
+  .filter-btn { padding: 6px 14px; border-radius: 99px; border: 1px solid var(--border); font-size: 13px; cursor: pointer; background: var(--card); color: var(--muted); font-family: 'Outfit', sans-serif; white-space: nowrap; transition: all 0.15s; }
+  .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 1rem; }
+  .stat { background: var(--card); border-radius: var(--radius-sm); padding: 10px 6px; text-align: center; border: 1px solid var(--border); }
+  .stat-num { font-size: 20px; font-weight: 600; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .progress-bar { height: 5px; background: var(--border); border-radius: 3px; margin-bottom: 1.25rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.4s ease; }
+  .card-wrap { perspective: 1200px; margin-bottom: 1rem; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+  .card-inner { position: relative; height: 240px; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4,0.2,0.2,1); }
+  .card-inner.flipped { transform: rotateY(180deg); }
+  .card-face { position: absolute; inset: 0; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; backface-visibility: hidden; -webkit-backface-visibility: hidden; padding: 1.5rem; }
+  .card-back { transform: rotateY(180deg); }
+  .card-hint { font-size: 12px; color: var(--hint); position: absolute; bottom: 16px; }
+  .cat-badge { font-size: 11px; color: var(--muted); background: var(--bg); border: 1px solid var(--border); padding: 3px 10px; border-radius: 99px; position: absolute; top: 16px; }
+  .chinese { font-family: 'Noto Sans SC', sans-serif; font-size: 64px; font-weight: 700; color: var(--text); line-height: 1; }
+  .pinyin { font-size: 22px; color: var(--green); margin-top: 8px; font-weight: 500; }
+  .meaning { font-size: 20px; font-weight: 500; color: var(--text); text-align: center; }
+  .meaning-small { font-family: 'Noto Sans SC', sans-serif; font-size: 36px; color: var(--muted); margin-top: 10px; }
+  .btn-row { display: flex; gap: 10px; margin-bottom: 1rem; }
+  .btn { flex: 1; padding: 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); font-size: 15px; font-weight: 500; cursor: pointer; font-family: 'Outfit', sans-serif; transition: all 0.15s; background: var(--card); }
+  .btn:active { transform: scale(0.97); }
+  .btn-wrong { color: var(--red); border-color: #f5b7b1; }
+  .btn-wrong:hover { background: var(--red-light); }
+  .btn-right { color: var(--green); border-color: #a3e4cc; }
+  .btn-right:hover { background: var(--green-light); }
+  .btn-next { color: var(--accent); border-color: #c5cae9; }
+  .btn-next:hover { background: #eef0fc; }
+  .flip-hint { text-align: center; font-size: 13px; color: var(--hint); margin-bottom: 0.5rem; }
+  .quiz-q { font-family: 'Noto Sans SC', sans-serif; font-size: 64px; font-weight: 700; text-align: center; margin: 0.5rem 0 0.75rem; color: var(--text); }
+  .quiz-pinyin { font-size: 18px; color: var(--green); text-align: center; margin-bottom: 1.25rem; font-weight: 500; min-height: 27px; }
+  .quiz-option { width: 100%; padding: 14px 1rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border); font-size: 15px; cursor: pointer; background: var(--card); color: var(--text); text-align: left; margin-bottom: 10px; font-family: 'Outfit', sans-serif; transition: all 0.15s; }
+  .quiz-option:hover:not(:disabled) { background: #f0f0f8; border-color: #c5cae9; }
+  .quiz-option.correct { border-color: #a3e4cc; background: var(--green-light); color: #0a6644; font-weight: 500; }
+  .quiz-option.wrong { border-color: #f5b7b1; background: var(--red-light); color: var(--red); }
+  .browse-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  .browse-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 10px; text-align: center; }
+  .browse-zh { font-family: 'Noto Sans SC', sans-serif; font-size: 34px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .browse-py { font-size: 13px; color: var(--green); margin: 4px 0 2px; font-weight: 500; }
+  .browse-en { font-size: 12px; color: var(--muted); }
+  .done { text-align: center; padding: 2.5rem 1rem; }
+  .done-pct { font-size: 48px; font-weight: 600; color: var(--accent); }
+  .done-msg { font-size: 22px; font-weight: 500; margin: 8px 0 0.5rem; }
+  .done-sub { font-size: 15px; color: var(--muted); margin-bottom: 1.5rem; }
+  .btn-reset { display: inline-block; padding: 12px 28px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 500; cursor: pointer; font-family: 'Outfit', sans-serif; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>HSK 1 词汇 Practice</h1>
+    <p>150 essential vocabulary words</p>
+  </header>
+  <div class="mode-tabs">
+    <button class="tab active" onclick="setMode('flashcard')" id="tab-flashcard">Flashcards</button>
+    <button class="tab" onclick="setMode('quiz')" id="tab-quiz">Quiz</button>
+    <button class="tab" onclick="setMode('browse')" id="tab-browse">Browse</button>
+  </div>
+  <div class="filter-wrap"><div class="filter-row" id="filter-row"></div></div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="stats">
+    <div class="stat"><div class="stat-num" id="stat-seen">0</div><div class="stat-label">seen</div></div>
+    <div class="stat"><div class="stat-num" id="stat-correct" style="color:#1D9E75">0</div><div class="stat-label">correct</div></div>
+    <div class="stat"><div class="stat-num" id="stat-wrong" style="color:#c0392b">0</div><div class="stat-label">missed</div></div>
+    <div class="stat"><div class="stat-num" id="stat-left">0</div><div class="stat-label">left</div></div>
+  </div>
+  <div id="main-area"></div>
+</div>
+<script>
+const vocab = [
+  {zh:"爱",py:"ài",en:"to love",cat:"verbs"},
+  {zh:"八",py:"bā",en:"eight",cat:"numbers"},
+  {zh:"爸爸",py:"bàba",en:"dad / father",cat:"people"},
+  {zh:"杯子",py:"bēizi",en:"cup / glass",cat:"objects"},
+  {zh:"北京",py:"Běijīng",en:"Beijing",cat:"places"},
+  {zh:"本",py:"běn",en:"(measure for books)",cat:"measure"},
+  {zh:"不",py:"bù",en:"no / not",cat:"basics"},
+  {zh:"不客气",py:"bú kèqi",en:"you're welcome",cat:"phrases"},
+  {zh:"菜",py:"cài",en:"dish / vegetable",cat:"food"},
+  {zh:"茶",py:"chá",en:"tea",cat:"food"},
+  {zh:"吃",py:"chī",en:"to eat",cat:"verbs"},
+  {zh:"出租车",py:"chūzūchē",en:"taxi",cat:"transport"},
+  {zh:"打电话",py:"dǎ diànhuà",en:"to make a phone call",cat:"phrases"},
+  {zh:"大",py:"dà",en:"big / large",cat:"adjectives"},
+  {zh:"的",py:"de",en:"(possessive particle)",cat:"grammar"},
+  {zh:"点",py:"diǎn",en:"o'clock / point",cat:"time"},
+  {zh:"电脑",py:"diànnǎo",en:"computer",cat:"objects"},
+  {zh:"电视",py:"diànshì",en:"television",cat:"objects"},
+  {zh:"电影",py:"diànyǐng",en:"movie / film",cat:"culture"},
+  {zh:"东西",py:"dōngxi",en:"thing / stuff",cat:"objects"},
+  {zh:"都",py:"dōu",en:"all / both",cat:"grammar"},
+  {zh:"读",py:"dú",en:"to read aloud",cat:"verbs"},
+  {zh:"对不起",py:"duìbuqǐ",en:"sorry",cat:"phrases"},
+  {zh:"多",py:"duō",en:"many / much",cat:"adjectives"},
+  {zh:"多少",py:"duōshao",en:"how many / how much",cat:"question"},
+  {zh:"儿子",py:"érzi",en:"son",cat:"people"},
+  {zh:"二",py:"èr",en:"two",cat:"numbers"},
+  {zh:"饭店",py:"fàndiàn",en:"hotel / restaurant",cat:"places"},
+  {zh:"飞机",py:"fēijī",en:"airplane",cat:"transport"},
+  {zh:"分钟",py:"fēnzhōng",en:"minute",cat:"time"},
+  {zh:"高兴",py:"gāoxìng",en:"happy / pleased",cat:"adjectives"},
+  {zh:"个",py:"gè",en:"(general measure word)",cat:"measure"},
+  {zh:"工作",py:"gōngzuò",en:"work / job",cat:"verbs"},
+  {zh:"狗",py:"gǒu",en:"dog",cat:"animals"},
+  {zh:"汉语",py:"Hànyǔ",en:"Chinese (language)",cat:"language"},
+  {zh:"好",py:"hǎo",en:"good / well",cat:"adjectives"},
+  {zh:"好吃",py:"hǎochī",en:"delicious",cat:"adjectives"},
+  {zh:"号",py:"hào",en:"number / date",cat:"time"},
+  {zh:"喝",py:"hē",en:"to drink",cat:"verbs"},
+  {zh:"和",py:"hé",en:"and / with",cat:"grammar"},
+  {zh:"很",py:"hěn",en:"very",cat:"grammar"},
+  {zh:"后面",py:"hòumiàn",en:"behind / back",cat:"location"},
+  {zh:"回",py:"huí",en:"to return",cat:"verbs"},
+  {zh:"会",py:"huì",en:"can / know how to",cat:"verbs"},
+  {zh:"几",py:"jǐ",en:"how many / several",cat:"question"},
+  {zh:"家",py:"jiā",en:"home / family",cat:"places"},
+  {zh:"叫",py:"jiào",en:"to be called / to call",cat:"verbs"},
+  {zh:"今天",py:"jīntiān",en:"today",cat:"time"},
+  {zh:"九",py:"jiǔ",en:"nine",cat:"numbers"},
+  {zh:"开",py:"kāi",en:"to open / to drive",cat:"verbs"},
+  {zh:"看",py:"kàn",en:"to look / to watch",cat:"verbs"},
+  {zh:"看见",py:"kànjiàn",en:"to see / to catch sight of",cat:"verbs"},
+  {zh:"块",py:"kuài",en:"yuan (money) / piece",cat:"measure"},
+  {zh:"来",py:"lái",en:"to come",cat:"verbs"},
+  {zh:"老师",py:"lǎoshī",en:"teacher",cat:"people"},
+  {zh:"了",py:"le",en:"(completed action particle)",cat:"grammar"},
+  {zh:"冷",py:"lěng",en:"cold",cat:"adjectives"},
+  {zh:"里",py:"lǐ",en:"inside / in",cat:"location"},
+  {zh:"零",py:"líng",en:"zero",cat:"numbers"},
+  {zh:"六",py:"liù",en:"six",cat:"numbers"},
+  {zh:"妈妈",py:"māma",en:"mom / mother",cat:"people"},
+  {zh:"吗",py:"ma",en:"(yes/no question particle)",cat:"grammar"},
+  {zh:"买",py:"mǎi",en:"to buy",cat:"verbs"},
+  {zh:"猫",py:"māo",en:"cat",cat:"animals"},
+  {zh:"没关系",py:"méi guānxi",en:"it's okay / never mind",cat:"phrases"},
+  {zh:"没有",py:"méiyǒu",en:"to not have / there isn't",cat:"verbs"},
+  {zh:"米饭",py:"mǐfàn",en:"cooked rice",cat:"food"},
+  {zh:"名字",py:"míngzi",en:"name",cat:"people"},
+  {zh:"明天",py:"míngtiān",en:"tomorrow",cat:"time"},
+  {zh:"哪",py:"nǎ",en:"which",cat:"question"},
+  {zh:"哪儿",py:"nǎr",en:"where",cat:"question"},
+  {zh:"那",py:"nà",en:"that",cat:"grammar"},
+  {zh:"呢",py:"ne",en:"(tag question particle)",cat:"grammar"},
+  {zh:"能",py:"néng",en:"to be able to / can",cat:"verbs"},
+  {zh:"你",py:"nǐ",en:"you",cat:"basics"},
+  {zh:"你好",py:"nǐhǎo",en:"hello",cat:"phrases"},
+  {zh:"年",py:"nián",en:"year",cat:"time"},
+  {zh:"女儿",py:"nǚér",en:"daughter",cat:"people"},
+  {zh:"朋友",py:"péngyou",en:"friend",cat:"people"},
+  {zh:"漂亮",py:"piàoliang",en:"pretty / beautiful",cat:"adjectives"},
+  {zh:"苹果",py:"píngguǒ",en:"apple",cat:"food"},
+  {zh:"七",py:"qī",en:"seven",cat:"numbers"},
+  {zh:"钱",py:"qián",en:"money",cat:"objects"},
+  {zh:"前面",py:"qiánmiàn",en:"front / ahead",cat:"location"},
+  {zh:"请",py:"qǐng",en:"please / to invite",cat:"phrases"},
+  {zh:"去",py:"qù",en:"to go",cat:"verbs"},
+  {zh:"热",py:"rè",en:"hot",cat:"adjectives"},
+  {zh:"人",py:"rén",en:"person / people",cat:"people"},
+  {zh:"认识",py:"rènshi",en:"to know / to recognize",cat:"verbs"},
+  {zh:"日",py:"rì",en:"day / sun",cat:"time"},
+  {zh:"商店",py:"shāngdiàn",en:"shop / store",cat:"places"},
+  {zh:"上",py:"shàng",en:"up / on / above",cat:"location"},
+  {zh:"上午",py:"shàngwǔ",en:"morning / AM",cat:"time"},
+  {zh:"少",py:"shǎo",en:"few / little",cat:"adjectives"},
+  {zh:"谁",py:"shéi",en:"who",cat:"question"},
+  {zh:"什么",py:"shénme",en:"what",cat:"question"},
+  {zh:"十",py:"shí",en:"ten",cat:"numbers"},
+  {zh:"时候",py:"shíhou",en:"time / moment",cat:"time"},
+  {zh:"是",py:"shì",en:"to be (is/are/am)",cat:"basics"},
+  {zh:"书",py:"shū",en:"book",cat:"objects"},
+  {zh:"水",py:"shuǐ",en:"water",cat:"food"},
+  {zh:"水果",py:"shuǐguǒ",en:"fruit",cat:"food"},
+  {zh:"睡觉",py:"shuìjiào",en:"to sleep",cat:"verbs"},
+  {zh:"说",py:"shuō",en:"to speak / to say",cat:"verbs"},
+  {zh:"四",py:"sì",en:"four",cat:"numbers"},
+  {zh:"岁",py:"suì",en:"years old",cat:"basics"},
+  {zh:"他",py:"tā",en:"he / him",cat:"basics"},
+  {zh:"她",py:"tā",en:"she / her",cat:"basics"},
+  {zh:"太",py:"tài",en:"too / extremely",cat:"grammar"},
+  {zh:"天气",py:"tiānqì",en:"weather",cat:"nature"},
+  {zh:"听",py:"tīng",en:"to listen / to hear",cat:"verbs"},
+  {zh:"同学",py:"tóngxué",en:"classmate",cat:"people"},
+  {zh:"喂",py:"wèi",en:"hello (on phone) / hey",cat:"phrases"},
+  {zh:"我",py:"wǒ",en:"I / me",cat:"basics"},
+  {zh:"我们",py:"wǒmen",en:"we / us",cat:"basics"},
+  {zh:"五",py:"wǔ",en:"five",cat:"numbers"},
+  {zh:"下",py:"xià",en:"down / under / below",cat:"location"},
+  {zh:"下午",py:"xiàwǔ",en:"afternoon / PM",cat:"time"},
+  {zh:"下雨",py:"xià yǔ",en:"to rain",cat:"nature"},
+  {zh:"先生",py:"xiānsheng",en:"Mr. / husband / sir",cat:"people"},
+  {zh:"现在",py:"xiànzài",en:"now",cat:"time"},
+  {zh:"想",py:"xiǎng",en:"to want / to think / to miss",cat:"verbs"},
+  {zh:"小",py:"xiǎo",en:"small / little",cat:"adjectives"},
+  {zh:"小姐",py:"xiǎojiě",en:"Miss / Ms.",cat:"people"},
+  {zh:"些",py:"xiē",en:"some / a few",cat:"grammar"},
+  {zh:"写",py:"xiě",en:"to write",cat:"verbs"},
+  {zh:"谢谢",py:"xièxie",en:"thank you",cat:"phrases"},
+  {zh:"星期",py:"xīngqī",en:"week",cat:"time"},
+  {zh:"学生",py:"xuésheng",en:"student",cat:"people"},
+  {zh:"学习",py:"xuéxí",en:"to study / to learn",cat:"verbs"},
+  {zh:"学校",py:"xuéxiào",en:"school",cat:"places"},
+  {zh:"一",py:"yī",en:"one",cat:"numbers"},
+  {zh:"衣服",py:"yīfu",en:"clothes",cat:"objects"},
+  {zh:"医生",py:"yīshēng",en:"doctor",cat:"people"},
+  {zh:"医院",py:"yīyuàn",en:"hospital",cat:"places"},
+  {zh:"椅子",py:"yǐzi",en:"chair",cat:"objects"},
+  {zh:"也",py:"yě",en:"also / too",cat:"grammar"},
+  {zh:"一点儿",py:"yīdiǎnr",en:"a little bit",cat:"grammar"},
+  {zh:"因为",py:"yīnwèi",en:"because",cat:"grammar"},
+  {zh:"有",py:"yǒu",en:"to have / there is",cat:"verbs"},
+  {zh:"语文",py:"yǔwén",en:"Chinese language/literature",cat:"language"},
+  {zh:"再见",py:"zàijiàn",en:"goodbye",cat:"phrases"},
+  {zh:"在",py:"zài",en:"at / in / to be at",cat:"basics"},
+  {zh:"怎么",py:"zěnme",en:"how / why",cat:"question"},
+  {zh:"怎么样",py:"zěnmeyàng",en:"how about / how is it",cat:"question"},
+  {zh:"这",py:"zhè",en:"this",cat:"grammar"},
+  {zh:"中国",py:"Zhōngguó",en:"China",cat:"places"},
+  {zh:"中午",py:"zhōngwǔ",en:"noon / midday",cat:"time"},
+  {zh:"住",py:"zhù",en:"to live / to stay",cat:"verbs"},
+  {zh:"桌子",py:"zhuōzi",en:"table / desk",cat:"objects"},
+  {zh:"字",py:"zì",en:"character / word",cat:"language"},
+  {zh:"昨天",py:"zuótiān",en:"yesterday",cat:"time"},
+  {zh:"坐",py:"zuò",en:"to sit / to travel by",cat:"verbs"},
+  {zh:"做",py:"zuò",en:"to do / to make",cat:"verbs"}
+];
+
+const cats = [...new Set(vocab.map(v=>v.cat))].sort();
+let mode = 'flashcard', activeFilter = 'all';
+let deck = [], idx = 0, flipped = false;
+let correct = 0, wrong = 0, seen = 0;
+let quizAnswered = false, quizOptions = [], quizCorrectIdx = 0;
+
+function getDeck() {
+  let d = activeFilter==='all' ? [...vocab] : vocab.filter(v=>v.cat===activeFilter);
+  return shuffle(d);
+}
+function shuffle(arr) {
+  let a=[...arr];
+  for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function resetSession() {
+  deck=getDeck(); idx=0; flipped=false; correct=0; wrong=0; seen=0; quizAnswered=false;
+  updateStats(); render();
+}
+function setMode(m) {
+  mode=m;
+  document.querySelectorAll('.tab[id^=tab]').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+m).classList.add('active');
+  resetSession();
+}
+function setFilter(f) {
+  activeFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.filter-btn[data-cat="'+f+'"]').classList.add('active');
+  resetSession();
+}
+function buildFilterRow() {
+  const row=document.getElementById('filter-row');
+  let html=`<button class="filter-btn active" data-cat="all" onclick="setFilter('all')">All (${vocab.length})</button>`;
+  cats.forEach(c=>{
+    const cnt=vocab.filter(v=>v.cat===c).length;
+    html+=`<button class="filter-btn" data-cat="${c}" onclick="setFilter('${c}')">${c} (${cnt})</button>`;
+  });
+  row.innerHTML=html;
+}
+function updateStats() {
+  const total=deck.length, left=Math.max(0,total-idx);
+  document.getElementById('stat-seen').textContent=seen;
+  document.getElementById('stat-correct').textContent=correct;
+  document.getElementById('stat-wrong').textContent=wrong;
+  document.getElementById('stat-left').textContent=left;
+  const pct=total>0?Math.round((idx/total)*100):0;
+  document.getElementById('progress-fill').style.width=pct+'%';
+}
+function render() {
+  if(mode==='flashcard') renderFlashcard();
+  else if(mode==='quiz') renderQuiz();
+  else renderBrowse();
+}
+function renderFlashcard() {
+  const el=document.getElementById('main-area');
+  if(idx>=deck.length){el.innerHTML=doneHTML();return;}
+  const w=deck[idx];
+  el.innerHTML=`
+    <div class="card-wrap" onclick="flipCard()">
+      <div class="card-inner" id="card-inner">
+        <div class="card-face">
+          <span class="cat-badge">${w.cat}</span>
+          <div class="chinese">${w.zh}</div>
+          <div class="card-hint">tap to reveal</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="pinyin">${w.py}</div>
+          <div class="meaning">${w.en}</div>
+          <div class="meaning-small">${w.zh}</div>
+          <div class="card-hint">tap to flip back</div>
+        </div>
+      </div>
+    </div>
+    <p class="flip-hint" id="flip-hint">Flip the card, then mark yourself</p>
+    <div class="btn-row" id="answer-btns" style="display:none">
+      <button class="btn btn-wrong" onclick="markWrong()">✗ Missed it</button>
+      <button class="btn btn-right" onclick="markRight()">✓ Got it</button>
+    </div>`;
+}
+function flipCard() {
+  flipped=!flipped;
+  document.getElementById('card-inner').classList.toggle('flipped',flipped);
+  document.getElementById('answer-btns').style.display=flipped?'flex':'none';
+  document.getElementById('flip-hint').style.display=flipped?'none':'block';
+}
+function markRight(){correct++;seen++;idx++;flipped=false;updateStats();render();}
+function markWrong(){wrong++;seen++;idx++;flipped=false;updateStats();render();}
+
+function renderQuiz() {
+  const el=document.getElementById('main-area');
+  if(idx>=deck.length){el.innerHTML=doneHTML();return;}
+  const w=deck[idx];
+  if(!quizAnswered){
+    let pool=vocab.filter(v=>v.zh!==w.zh);
+    quizOptions=shuffle([w,...shuffle(pool).slice(0,3)]);
+    quizCorrectIdx=quizOptions.indexOf(w);
+  }
+  const optHTML=quizOptions.map((o,i)=>{
+    let cls='quiz-option';
+    if(quizAnswered&&i===quizCorrectIdx)cls+=' correct';
+    return `<button class="${cls}" ${quizAnswered?'disabled':''} onclick="answerQuiz(${i})">${o.en}</button>`;
+  }).join('');
+  el.innerHTML=`
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:4px;">What does this mean?</p>
+    <div class="quiz-q">${w.zh}</div>
+    <div class="quiz-pinyin">${quizAnswered?w.py:'&nbsp;'}</div>
+    ${optHTML}
+    ${quizAnswered?`<div style="text-align:center;margin-top:0.5rem;"><button class="btn btn-next" onclick="nextQuiz()">Next →</button></div>`:''}`;
+}
+function answerQuiz(i) {
+  if(quizAnswered)return;
+  quizAnswered=true; seen++;
+  if(i===quizCorrectIdx)correct++;else wrong++;
+  updateStats(); renderQuiz();
+}
+function nextQuiz(){idx++;quizAnswered=false;updateStats();render();}
+
+function renderBrowse() {
+  const el=document.getElementById('main-area');
+  const filtered=activeFilter==='all'?vocab:vocab.filter(v=>v.cat===activeFilter);
+  let html='<div class="browse-grid">';
+  filtered.forEach(w=>{
+    html+=`<div class="browse-card">
+      <div class="browse-zh">${w.zh}</div>
+      <div class="browse-py">${w.py}</div>
+      <div class="browse-en">${w.en}</div>
+    </div>`;
+  });
+  html+='</div>';
+  el.innerHTML=html;
+  document.getElementById('stat-seen').textContent=filtered.length;
+  document.getElementById('stat-correct').textContent='—';
+  document.getElementById('stat-wrong').textContent='—';
+  document.getElementById('stat-left').textContent='—';
+  document.getElementById('progress-fill').style.width='100%';
+}
+function doneHTML() {
+  const total=deck.length, pct=total>0?Math.round((correct/total)*100):0;
+  const msg=pct>=80?'太棒了！Excellent!':pct>=60?'不错！Good job!':'继续加油！Keep going!';
+  return `<div class="done">
+    <div style="font-size:52px;margin-bottom:0.75rem;">${pct>=80?'🎉':pct>=60?'👍':'💪'}</div>
+    <div class="done-pct">${pct}%</div>
+    <div class="done-msg">${msg}</div>
+    <div class="done-sub">${correct} correct out of ${total} words</div>
+    <button class="btn-reset" onclick="resetSession()">Practice again</button>
+  </div>`;
+}
+buildFilterRow();
+resetSession();
+</script>
+</body>
+</html>
